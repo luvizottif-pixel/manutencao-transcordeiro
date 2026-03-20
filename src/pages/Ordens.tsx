@@ -1,0 +1,99 @@
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Plus, Search, CheckCircle, Clock, Wrench } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+const ordens = [
+  { id: "OS-2024-0147", veiculo: "Scania R450 — ABC-1D23", servico: "Troca de embreagem", status: "em_andamento", prioridade: "alta", data: "19/03/2026", valor: "R$ 4.850,00" },
+  { id: "OS-2024-0146", veiculo: "Volvo FH 540 — XYZ-9K87", servico: "Revisão completa", status: "concluida", prioridade: "normal", data: "18/03/2026", valor: "R$ 2.300,00" },
+  { id: "OS-2024-0145", veiculo: "Carreta Randon — QRS-4F56", servico: "Troca de lonas de freio", status: "pendente", prioridade: "alta", data: "17/03/2026", valor: "R$ 1.200,00" },
+  { id: "OS-2024-0144", veiculo: "Mercedes Actros — LMN-7H01", servico: "Troca de óleo e filtros", status: "concluida", prioridade: "normal", data: "16/03/2026", valor: "R$ 890,00" },
+  { id: "OS-2024-0143", veiculo: "DAF XF — GHI-2B34", servico: "Alinhamento e balanceamento", status: "em_andamento", prioridade: "normal", data: "15/03/2026", valor: "R$ 650,00" },
+  { id: "OS-2024-0142", veiculo: "Scania R450 — ABC-1D23", servico: "Troca de pneus (6 eixos)", status: "pendente", prioridade: "urgente", data: "14/03/2026", valor: "R$ 12.400,00" },
+];
+
+const statusConfig: Record<string, { label: string; className: string; icon: typeof CheckCircle }> = {
+  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-warning/30", icon: Clock },
+  em_andamento: { label: "Em Andamento", className: "bg-info/15 text-info border-info/30", icon: Wrench },
+  concluida: { label: "Concluída", className: "bg-success/15 text-success border-success/30", icon: CheckCircle },
+};
+
+const prioridadeConfig: Record<string, string> = {
+  normal: "bg-muted text-muted-foreground",
+  alta: "bg-warning/15 text-warning border-warning/30",
+  urgente: "bg-destructive/15 text-destructive border-destructive/30",
+};
+
+export default function OrdensPage() {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Ordens de Serviço</h2>
+            <p className="text-muted-foreground mt-1">Gerencie todas as ordens de manutenção</p>
+          </div>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Ordem
+          </Button>
+        </div>
+
+        <div className="relative max-w-sm animate-fade-in">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por número ou veículo..." className="pl-9" />
+        </div>
+
+        <Card className="animate-fade-up shadow-sm" style={{ animationDelay: "100ms" }}>
+          <CardHeader>
+            <CardTitle className="text-lg">Todas as Ordens</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-3 pr-4 font-medium">Ordem</th>
+                    <th className="pb-3 pr-4 font-medium">Veículo</th>
+                    <th className="pb-3 pr-4 font-medium">Serviço</th>
+                    <th className="pb-3 pr-4 font-medium">Prioridade</th>
+                    <th className="pb-3 pr-4 font-medium">Status</th>
+                    <th className="pb-3 pr-4 font-medium">Valor</th>
+                    <th className="pb-3 font-medium">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ordens.map((o) => {
+                    const sc = statusConfig[o.status];
+                    return (
+                      <tr key={o.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer active:bg-muted">
+                        <td className="py-3 pr-4 font-mono text-xs font-medium">{o.id}</td>
+                        <td className="py-3 pr-4">{o.veiculo}</td>
+                        <td className="py-3 pr-4">{o.servico}</td>
+                        <td className="py-3 pr-4">
+                          <Badge variant="outline" className={prioridadeConfig[o.prioridade]}>
+                            {o.prioridade.charAt(0).toUpperCase() + o.prioridade.slice(1)}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Badge variant="outline" className={sc.className}>
+                            <sc.icon className="h-3 w-3 mr-1" />
+                            {sc.label}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pr-4 tabular-nums font-medium">{o.valor}</td>
+                        <td className="py-3 tabular-nums">{o.data}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
