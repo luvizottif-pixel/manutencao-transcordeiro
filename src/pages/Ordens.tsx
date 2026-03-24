@@ -191,8 +191,8 @@ export default function OrdensPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="servico">Serviço *</Label>
-              <Input id="servico" placeholder="Ex: Troca de embreagem" value={servico} onChange={(e) => setServico(e.target.value)} />
+              <Label htmlFor="servico">Defeito *</Label>
+              <Input id="servico" placeholder="Ex: Embreagem patinando" value={servico} onChange={(e) => setServico(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -217,8 +217,8 @@ export default function OrdensPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="obs">Observações</Label>
-              <Textarea id="obs" placeholder="Detalhes adicionais sobre o serviço..." value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
+              <Label htmlFor="obs">Serviço executado</Label>
+              <Textarea id="obs" placeholder="Descreva o serviço realizado..." value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
             </div>
           </div>
 
