@@ -1,17 +1,42 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, CheckCircle, Clock, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
 
-const ordens = [
+interface Ordem {
+  id: string;
+  veiculo: string;
+  servico: string;
+  status: string;
+  prioridade: string;
+  data: string;
+  valor: string;
+}
+
+const ordensIniciais: Ordem[] = [
   { id: "OS-2024-0147", veiculo: "Scania R450 — ABC-1D23", servico: "Troca de embreagem", status: "em_andamento", prioridade: "alta", data: "19/03/2026", valor: "R$ 4.850,00" },
   { id: "OS-2024-0146", veiculo: "Volvo FH 540 — XYZ-9K87", servico: "Revisão completa", status: "concluida", prioridade: "normal", data: "18/03/2026", valor: "R$ 2.300,00" },
   { id: "OS-2024-0145", veiculo: "Carreta Randon — QRS-4F56", servico: "Troca de lonas de freio", status: "pendente", prioridade: "alta", data: "17/03/2026", valor: "R$ 1.200,00" },
   { id: "OS-2024-0144", veiculo: "Mercedes Actros — LMN-7H01", servico: "Troca de óleo e filtros", status: "concluida", prioridade: "normal", data: "16/03/2026", valor: "R$ 890,00" },
   { id: "OS-2024-0143", veiculo: "DAF XF — GHI-2B34", servico: "Alinhamento e balanceamento", status: "em_andamento", prioridade: "normal", data: "15/03/2026", valor: "R$ 650,00" },
   { id: "OS-2024-0142", veiculo: "Scania R450 — ABC-1D23", servico: "Troca de pneus (6 eixos)", status: "pendente", prioridade: "urgente", data: "14/03/2026", valor: "R$ 12.400,00" },
+];
+
+const veiculosDisponiveis = [
+  "Scania R450 — ABC-1D23",
+  "Volvo FH 540 — XYZ-9K87",
+  "Carreta Randon — QRS-4F56",
+  "Mercedes Actros — LMN-7H01",
+  "DAF XF — GHI-2B34",
+  "Carreta Librelato — DEF-5G78",
 ];
 
 const statusConfig: Record<string, { label: string; className: string; icon: typeof CheckCircle }> = {
@@ -27,6 +52,48 @@ const prioridadeConfig: Record<string, string> = {
 };
 
 export default function OrdensPage() {
+  const [ordens, setOrdens] = useState<Ordem[]>(ordensIniciais);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [veiculo, setVeiculo] = useState("");
+  const [servico, setServico] = useState("");
+  const [prioridade, setPrioridade] = useState("");
+  const [valor, setValor] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+
+  const resetForm = () => {
+    setVeiculo("");
+    setServico("");
+    setPrioridade("");
+    setValor("");
+    setObservacoes("");
+  };
+
+  const handleSubmit = () => {
+    if (!veiculo || !servico || !prioridade) {
+      toast({ title: "Preencha os campos obrigatórios", description: "Veículo, serviço e prioridade são obrigatórios.", variant: "destructive" });
+      return;
+    }
+
+    const hoje = new Date();
+    const dataFormatada = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
+    const novoId = `OS-2024-${String(ordens.length + 142).padStart(4, "0")}`;
+
+    const novaOrdem: Ordem = {
+      id: novoId,
+      veiculo,
+      servico,
+      status: "pendente",
+      prioridade,
+      data: dataFormatada,
+      valor: valor || "A orçar",
+    };
+
+    setOrdens([novaOrdem, ...ordens]);
+    setDialogOpen(false);
+    resetForm();
+    toast({ title: "Ordem criada com sucesso!", description: `${novoId} foi adicionada.` });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -35,7 +102,7 @@ export default function OrdensPage() {
             <h2 className="text-2xl font-bold tracking-tight">Ordens de Serviço</h2>
             <p className="text-muted-foreground mt-1">Gerencie todas as ordens de manutenção</p>
           </div>
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
+          <Button onClick={() => setDialogOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
             <Plus className="h-4 w-4 mr-2" />
             Nova Ordem
           </Button>
@@ -94,6 +161,68 @@ export default function OrdensPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog Nova Ordem */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nova Ordem de Serviço</DialogTitle>
+            <DialogDescription>Preencha os dados para criar uma nova ordem de manutenção.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="veiculo">Veículo *</Label>
+              <Select value={veiculo} onValueChange={setVeiculo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o veículo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {veiculosDisponiveis.map((v) => (
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="servico">Serviço *</Label>
+              <Input id="servico" placeholder="Ex: Troca de embreagem" value={servico} onChange={(e) => setServico(e.target.value)} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="prioridade">Prioridade *</Label>
+                <Select value={prioridade} onValueChange={setPrioridade}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="alta">Alta</SelectItem>
+                    <SelectItem value="urgente">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="valor">Valor estimado</Label>
+                <Input id="valor" placeholder="R$ 0,00" value={valor} onChange={(e) => setValor(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="obs">Observações</Label>
+              <Textarea id="obs" placeholder="Detalhes adicionais sobre o serviço..." value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
+            <Button onClick={handleSubmit} className="bg-accent text-accent-foreground hover:bg-accent/90">Criar Ordem</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
