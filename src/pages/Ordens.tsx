@@ -76,7 +76,12 @@ export default function OrdensPage() {
 
     const hoje = new Date();
     const dataFormatada = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
-    const novoId = `OS-2024-${String(ordens.length + 142).padStart(4, "0")}`;
+    const dia = String(hoje.getDate()).padStart(2, "0");
+    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+    const ano = hoje.getFullYear();
+    const hora = `${String(hoje.getHours()).padStart(2, "0")}${String(hoje.getMinutes()).padStart(2, "0")}`;
+    const nomeVeiculo = veiculo.split(" — ")[0].replace(/\s+/g, "");
+    const novoId = `${nomeVeiculo}-OS-${dia}-${mes}-${ano}-${hora}`;
 
     const novaOrdem: Ordem = {
       id: novoId,
