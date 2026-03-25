@@ -1,11 +1,25 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
-const veiculos = [
+interface Veiculo {
+  placa: string;
+  modelo: string;
+  tipo: string;
+  ano: number;
+  cliente: string;
+  status: string;
+}
+
+const veiculosIniciais: Veiculo[] = [
   { placa: "ABC-1D23", modelo: "Scania R450", tipo: "Cavalo Mecânico", ano: 2022, cliente: "Transportes Silva", status: "ativo" },
   { placa: "XYZ-9K87", modelo: "Volvo FH 540", tipo: "Cavalo Mecânico", ano: 2021, cliente: "Logística Norte", status: "em_manutencao" },
   { placa: "QRS-4F56", modelo: "Randon SR BA", tipo: "Carreta", ano: 2020, cliente: "Transportes Silva", status: "ativo" },
@@ -21,6 +35,39 @@ const statusMap: Record<string, { label: string; className: string }> = {
 };
 
 export default function VeiculosPage() {
+  const [veiculos, setVeiculos] = useState<Veiculo[]>(veiculosIniciais);
+  const [open, setOpen] = useState(false);
+  const [placa, setPlaca] = useState("");
+  const [modelo, setModelo] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [ano, setAno] = useState("");
+  const [cliente, setCliente] = useState("");
+
+  const handleSubmit = () => {
+    if (!placa || !modelo || !tipo || !ano || !cliente) {
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+
+    const novo: Veiculo = {
+      placa,
+      modelo,
+      tipo,
+      ano: Number(ano),
+      cliente,
+      status: "ativo",
+    };
+
+    setVeiculos((prev) => [novo, ...prev]);
+    setOpen(false);
+    setPlaca("");
+    setModelo("");
+    setTipo("");
+    setAno("");
+    setCliente("");
+    toast({ title: "Veículo cadastrado com sucesso!" });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -29,7 +76,10 @@ export default function VeiculosPage() {
             <h2 className="text-2xl font-bold tracking-tight">Veículos</h2>
             <p className="text-muted-foreground mt-1">Cavalos mecânicos, carretas e caminhões cadastrados</p>
           </div>
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
+          <Button
+            onClick={() => setOpen(true)}
+            className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Novo Veículo
           </Button>
@@ -78,6 +128,48 @@ export default function VeiculosPage() {
           })}
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo Veículo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Placa</Label>
+              <Input placeholder="Ex: ABC-1D23" value={placa} onChange={(e) => setPlaca(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Modelo</Label>
+              <Input placeholder="Ex: Scania R450" value={modelo} onChange={(e) => setModelo(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo</Label>
+              <Select value={tipo} onValueChange={setTipo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cavalo Mecânico">Cavalo Mecânico</SelectItem>
+                  <SelectItem value="Carreta">Carreta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Ano</Label>
+              <Input type="number" placeholder="Ex: 2024" value={ano} onChange={(e) => setAno(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cliente</Label>
+              <Input placeholder="Ex: Transportes Silva" value={cliente} onChange={(e) => setCliente(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSubmit} className="bg-accent text-accent-foreground hover:bg-accent/90">Cadastrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
