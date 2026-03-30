@@ -7,6 +7,8 @@ import Index from "./pages/Index.tsx";
 import Veiculos from "./pages/Veiculos.tsx";
 import Ordens from "./pages/Ordens.tsx";
 import Clientes from "./pages/Clientes.tsx";
+import Servicos from "./pages/Servicos.tsx";
+import Configuracoes from "./pages/Configuracoes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/veiculos" element={<Veiculos />} />
           <Route path="/ordens" element={<Ordens />} />
           <Route path="/clientes" element={<Clientes />} />
+          <Route path="/servicos" element={<Servicos />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
