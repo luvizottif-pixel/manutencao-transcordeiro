@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, CheckCircle, Clock, Wrench } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, Wrench, Pencil, Trash2, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ interface Ordem {
   prioridade: string;
   data: string;
   valor: string;
+  observacoes?: string;
 }
 
 const ordensIniciais: Ordem[] = [
@@ -53,12 +54,18 @@ const prioridadeConfig: Record<string, string> = {
 
 export default function OrdensPage() {
   const [ordens, setOrdens] = useState<Ordem[]>(ordensIniciais);
+  const [busca, setBusca] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [viewIndex, setViewIndex] = useState<number | null>(null);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+
   const [veiculo, setVeiculo] = useState("");
   const [servico, setServico] = useState("");
   const [prioridade, setPrioridade] = useState("");
   const [valor, setValor] = useState("");
   const [observacoes, setObservacoes] = useState("");
+  const [statusEdit, setStatusEdit] = useState("");
 
   const resetForm = () => {
     setVeiculo("");
@@ -66,11 +73,39 @@ export default function OrdensPage() {
     setPrioridade("");
     setValor("");
     setObservacoes("");
+    setStatusEdit("");
+    setEditIndex(null);
+  };
+
+  const openEdit = (i: number) => {
+    const o = ordens[i];
+    setVeiculo(o.veiculo);
+    setServico(o.servico);
+    setPrioridade(o.prioridade);
+    setValor(o.valor);
+    setObservacoes(o.observacoes || "");
+    setStatusEdit(o.status);
+    setEditIndex(i);
+    setDialogOpen(true);
   };
 
   const handleSubmit = () => {
     if (!veiculo || !servico || !prioridade) {
-      toast({ title: "Preencha os campos obrigatórios", description: "Veículo, serviço e prioridade são obrigatórios.", variant: "destructive" });
+      toast({ title: "Preencha os campos obrigatórios", description: "Veículo, defeito e prioridade são obrigatórios.", variant: "destructive" });
+      return;
+    }
+
+    if (editIndex !== null) {
+      setOrdens((prev) =>
+        prev.map((o, i) =>
+          i === editIndex
+            ? { ...o, veiculo, servico, prioridade, valor: valor || "A orçar", observacoes, status: statusEdit || o.status }
+            : o
+        )
+      );
+      setDialogOpen(false);
+      resetForm();
+      toast({ title: "Ordem atualizada com sucesso!" });
       return;
     }
 
@@ -91,6 +126,7 @@ export default function OrdensPage() {
       prioridade,
       data: dataFormatada,
       valor: valor || "A orçar",
+      observacoes,
     };
 
     setOrdens([novaOrdem, ...ordens]);
@@ -98,6 +134,23 @@ export default function OrdensPage() {
     resetForm();
     toast({ title: "Ordem criada com sucesso!", description: `${novoId} foi adicionada.` });
   };
+
+  const handleDelete = () => {
+    if (deleteIndex === null) return;
+    const id = ordens[deleteIndex].id;
+    setOrdens((prev) => prev.filter((_, i) => i !== deleteIndex));
+    setDeleteIndex(null);
+    toast({ title: "Ordem excluída", description: `${id} foi removida.` });
+  };
+
+  const ordensFiltradas = ordens.filter(
+    (o) =>
+      o.id.toLowerCase().includes(busca.toLowerCase()) ||
+      o.veiculo.toLowerCase().includes(busca.toLowerCase()) ||
+      o.servico.toLowerCase().includes(busca.toLowerCase())
+  );
+
+  const viewOrdem = viewIndex !== null ? ordens[viewIndex] : null;
 
   return (
     <DashboardLayout>
@@ -107,7 +160,7 @@ export default function OrdensPage() {
             <h2 className="text-2xl font-bold tracking-tight">Ordens de Serviço</h2>
             <p className="text-muted-foreground mt-1">Gerencie todas as ordens de manutenção</p>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
+          <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.97] transition-all">
             <Plus className="h-4 w-4 mr-2" />
             Nova Ordem
           </Button>
@@ -115,12 +168,12 @@ export default function OrdensPage() {
 
         <div className="relative max-w-sm animate-fade-in">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por número ou veículo..." className="pl-9" />
+          <Input placeholder="Buscar por número, veículo ou defeito..." className="pl-9" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
 
         <Card className="animate-fade-up shadow-sm" style={{ animationDelay: "100ms" }}>
           <CardHeader>
-            <CardTitle className="text-lg">Todas as Ordens</CardTitle>
+            <CardTitle className="text-lg">Todas as Ordens ({ordensFiltradas.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -129,18 +182,20 @@ export default function OrdensPage() {
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="pb-3 pr-4 font-medium">Ordem</th>
                     <th className="pb-3 pr-4 font-medium">Veículo</th>
-                    <th className="pb-3 pr-4 font-medium">Serviço</th>
+                    <th className="pb-3 pr-4 font-medium">Defeito</th>
                     <th className="pb-3 pr-4 font-medium">Prioridade</th>
                     <th className="pb-3 pr-4 font-medium">Status</th>
                     <th className="pb-3 pr-4 font-medium">Valor</th>
-                    <th className="pb-3 font-medium">Data</th>
+                    <th className="pb-3 pr-4 font-medium">Data</th>
+                    <th className="pb-3 font-medium text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ordens.map((o) => {
+                  {ordensFiltradas.map((o) => {
                     const sc = statusConfig[o.status];
+                    const realIndex = ordens.indexOf(o);
                     return (
-                      <tr key={o.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer active:bg-muted">
+                      <tr key={o.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                         <td className="py-3 pr-4 font-mono text-xs font-medium">{o.id}</td>
                         <td className="py-3 pr-4">{o.veiculo}</td>
                         <td className="py-3 pr-4">{o.servico}</td>
@@ -156,10 +211,28 @@ export default function OrdensPage() {
                           </Badge>
                         </td>
                         <td className="py-3 pr-4 tabular-nums font-medium">{o.valor}</td>
-                        <td className="py-3 tabular-nums">{o.data}</td>
+                        <td className="py-3 pr-4 tabular-nums">{o.data}</td>
+                        <td className="py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewIndex(realIndex)}>
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(realIndex)}>
+                              <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteIndex(realIndex)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
+                  {ordensFiltradas.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground">Nenhuma ordem encontrada.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -167,41 +240,32 @@ export default function OrdensPage() {
         </Card>
       </div>
 
-      {/* Dialog Nova Ordem */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Dialog Criar / Editar */}
+      <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) resetForm(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nova Ordem de Serviço</DialogTitle>
-            <DialogDescription>Preencha os dados para criar uma nova ordem de manutenção.</DialogDescription>
+            <DialogTitle>{editIndex !== null ? "Editar Ordem de Serviço" : "Nova Ordem de Serviço"}</DialogTitle>
+            <DialogDescription>{editIndex !== null ? "Atualize os dados da ordem." : "Preencha os dados para criar uma nova ordem."}</DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="veiculo">Veículo *</Label>
+              <Label>Veículo *</Label>
               <Select value={veiculo} onValueChange={setVeiculo}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o veículo" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione o veículo" /></SelectTrigger>
                 <SelectContent>
-                  {veiculosDisponiveis.map((v) => (
-                    <SelectItem key={v} value={v}>{v}</SelectItem>
-                  ))}
+                  {veiculosDisponiveis.map((v) => (<SelectItem key={v} value={v}>{v}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="servico">Defeito *</Label>
-              <Input id="servico" placeholder="Ex: Embreagem patinando" value={servico} onChange={(e) => setServico(e.target.value)} />
+              <Label>Defeito *</Label>
+              <Input placeholder="Ex: Embreagem patinando" value={servico} onChange={(e) => setServico(e.target.value)} />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="prioridade">Prioridade *</Label>
+                <Label>Prioridade *</Label>
                 <Select value={prioridade} onValueChange={setPrioridade}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="alta">Alta</SelectItem>
@@ -209,22 +273,77 @@ export default function OrdensPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="valor">Valor estimado</Label>
-                <Input id="valor" placeholder="R$ 0,00" value={valor} onChange={(e) => setValor(e.target.value)} />
+                <Label>Valor estimado</Label>
+                <Input placeholder="R$ 0,00" value={valor} onChange={(e) => setValor(e.target.value)} />
               </div>
             </div>
-
+            {editIndex !== null && (
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={statusEdit} onValueChange={setStatusEdit}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                    <SelectItem value="concluida">Concluída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="obs">Serviço executado</Label>
-              <Textarea id="obs" placeholder="Descreva o serviço realizado..." value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
+              <Label>Serviço executado</Label>
+              <Textarea placeholder="Descreva o serviço realizado..." value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} />
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
-            <Button onClick={handleSubmit} className="bg-accent text-accent-foreground hover:bg-accent/90">Criar Ordem</Button>
+            <Button onClick={handleSubmit} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              {editIndex !== null ? "Salvar Alterações" : "Criar Ordem"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Visualizar */}
+      <Dialog open={viewIndex !== null} onOpenChange={() => setViewIndex(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Ordem</DialogTitle>
+          </DialogHeader>
+          {viewOrdem && (
+            <div className="space-y-3 py-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">ID</span><span className="font-mono font-medium">{viewOrdem.id}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Veículo</span><span>{viewOrdem.veiculo}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Defeito</span><span>{viewOrdem.servico}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Prioridade</span><Badge variant="outline" className={prioridadeConfig[viewOrdem.prioridade]}>{viewOrdem.prioridade}</Badge></div>
+              <div className="flex justify-between items-center"><span className="text-muted-foreground">Status</span><Badge variant="outline" className={statusConfig[viewOrdem.status].className}>{statusConfig[viewOrdem.status].label}</Badge></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-medium">{viewOrdem.valor}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span>{viewOrdem.data}</span></div>
+              {viewOrdem.observacoes && <div><span className="text-muted-foreground block mb-1">Serviço executado</span><p className="bg-muted rounded-md p-3">{viewOrdem.observacoes}</p></div>}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewIndex(null)}>Fechar</Button>
+            <Button onClick={() => { if (viewIndex !== null) { openEdit(viewIndex); setViewIndex(null); } }} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Pencil className="h-4 w-4 mr-2" /> Editar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Confirmar Exclusão */}
+      <Dialog open={deleteIndex !== null} onOpenChange={() => setDeleteIndex(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Excluir Ordem</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir a ordem <strong>{deleteIndex !== null ? ordens[deleteIndex]?.id : ""}</strong>? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteIndex(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
