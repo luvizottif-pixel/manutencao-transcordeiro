@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, CheckCircle, Clock, Wrench, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Search, CheckCircle, Clock, Wrench, Pencil, Trash2, Eye, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -220,8 +220,8 @@ export default function OrdensPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(realIndex)}>
                               <Pencil className="h-4 w-4 text-muted-foreground" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteIndex(realIndex)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                            <Button size="icon" className="h-8 w-8 bg-destructive hover:bg-destructive/90 text-destructive-foreground" onClick={() => setDeleteIndex(realIndex)}>
+                              <Minus className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
