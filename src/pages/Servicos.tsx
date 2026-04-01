@@ -115,7 +115,8 @@ export default function Servicos() {
           </Dialog>
         </div>
 
-        <Card>
+        {/* Desktop table */}
+        <Card className="hidden md:block">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5" /> Serviços Cadastrados</CardTitle>
           </CardHeader>
@@ -168,6 +169,42 @@ export default function Servicos() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          <h3 className="text-lg font-semibold flex items-center gap-2"><Wrench className="h-5 w-5" /> Serviços Cadastrados</h3>
+          {servicos.map((s) => (
+            <Card key={s.id} className="shadow-sm">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium">{s.nome}</p>
+                    <p className="text-xs text-muted-foreground">{s.descricao}</p>
+                  </div>
+                  <Badge
+                    variant={s.ativo ? "default" : "secondary"}
+                    className="cursor-pointer shrink-0"
+                    onClick={() => toggleAtivo(s.id)}
+                  >
+                    {s.ativo ? "Ativo" : "Inativo"}
+                  </Badge>
+                </div>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Categoria</span><Badge variant="outline">{s.categoria}</Badge></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Preço Base</span><span className="font-medium">R$ {s.precoBase}</span></div>
+                </div>
+                <div className="flex justify-end pt-2 border-t">
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 text-destructive hover:text-destructive" onClick={() => remover(s.id)}>
+                    <Trash2 className="h-3.5 w-3.5" /> Remover
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {servicos.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">Nenhum serviço cadastrado.</p>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
