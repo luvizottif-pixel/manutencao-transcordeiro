@@ -171,7 +171,8 @@ export default function OrdensPage() {
           <Input placeholder="Buscar por número, veículo ou defeito..." className="pl-9" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
 
-        <Card className="animate-fade-up shadow-sm" style={{ animationDelay: "100ms" }}>
+        {/* Desktop table */}
+        <Card className="animate-fade-up shadow-sm hidden md:block" style={{ animationDelay: "100ms" }}>
           <CardHeader>
             <CardTitle className="text-lg">Todas as Ordens ({ordensFiltradas.length})</CardTitle>
           </CardHeader>
@@ -238,6 +239,51 @@ export default function OrdensPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          <h3 className="text-lg font-semibold">Todas as Ordens ({ordensFiltradas.length})</h3>
+          {ordensFiltradas.map((o) => {
+            const sc = statusConfig[o.status];
+            const realIndex = ordens.indexOf(o);
+            return (
+              <Card key={o.id} className="shadow-sm">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-mono text-xs font-medium">{o.id}</p>
+                      <p className="text-sm font-medium mt-1">{o.veiculo}</p>
+                    </div>
+                    <Badge variant="outline" className={sc.className}>
+                      <sc.icon className="h-3 w-3 mr-1" />
+                      {sc.label}
+                    </Badge>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Defeito</span><span>{o.servico}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Prioridade</span><Badge variant="outline" className={prioridadeConfig[o.prioridade]}>{o.prioridade.charAt(0).toUpperCase() + o.prioridade.slice(1)}</Badge></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-medium tabular-nums">{o.valor}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span className="tabular-nums">{o.data}</span></div>
+                  </div>
+                  <div className="flex items-center justify-end gap-1 pt-2 border-t">
+                    <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => setViewIndex(realIndex)}>
+                      <Eye className="h-3.5 w-3.5" /> Ver
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => openEdit(realIndex)}>
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </Button>
+                    <Button size="sm" className="h-8 gap-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground" onClick={() => setDeleteIndex(realIndex)}>
+                      <Minus className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+          {ordensFiltradas.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">Nenhuma ordem encontrada.</p>
+          )}
+        </div>
       </div>
 
       {/* Dialog Criar / Editar */}
