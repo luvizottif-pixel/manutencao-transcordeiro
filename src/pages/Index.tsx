@@ -54,7 +54,8 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <Card className="animate-fade-up shadow-sm" style={{ animationDelay: "320ms" }}>
+        {/* Desktop table */}
+        <Card className="animate-fade-up shadow-sm hidden md:block" style={{ animationDelay: "320ms" }}>
           <CardHeader>
             <CardTitle className="text-lg">Ordens de Serviço Recentes</CardTitle>
           </CardHeader>
@@ -93,6 +94,34 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile cards */}
+        <div className="md:hidden space-y-3">
+          <h3 className="text-lg font-semibold">Ordens de Serviço Recentes</h3>
+          {recentOrders.map((order) => {
+            const sc = statusConfig[order.status];
+            return (
+              <Card key={order.id} className="shadow-sm">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-mono text-xs">{order.id}</p>
+                      <p className="text-sm font-medium mt-1">{order.veiculo}</p>
+                    </div>
+                    <Badge variant="outline" className={sc.className}>
+                      <sc.icon className="h-3 w-3 mr-1" />
+                      {sc.label}
+                    </Badge>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Serviço</span><span>{order.servico}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span className="tabular-nums">{order.data}</span></div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </DashboardLayout>
   );
