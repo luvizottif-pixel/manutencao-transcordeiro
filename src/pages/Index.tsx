@@ -2,21 +2,27 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, ClipboardList, Users, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ordensIniciais } from "@/data/ordens";
+
+const totalOrdens = ordensIniciais.length;
+const ordensAbertas = ordensIniciais.filter((o) => o.status !== "concluida").length;
+const ordensUrgentes = ordensIniciais.filter((o) => o.prioridade === "urgente").length;
+const ordensPendentes = ordensIniciais.filter((o) => o.status === "pendente").length;
 
 const stats = [
   { label: "Veículos Cadastrados", value: "34", icon: Truck, change: "+3 este mês" },
-  { label: "Ordens Abertas", value: "12", icon: ClipboardList, change: "4 urgentes" },
+  { label: "Ordens Abertas", value: String(ordensAbertas), icon: ClipboardList, change: `${ordensUrgentes} urgentes` },
   { label: "Clientes Ativos", value: "18", icon: Users, change: "+2 este mês" },
-  { label: "Manutenções Pendentes", value: "7", icon: AlertTriangle, change: "3 vencidas" },
+  { label: "Manutenções Pendentes", value: String(ordensPendentes), icon: AlertTriangle, change: `de ${totalOrdens} ordens` },
 ];
 
-const recentOrders = [
-  { id: "OS-2024-0147", veiculo: "Scania R450 — ABC-1D23", servico: "Troca de embreagem", status: "em_andamento", data: "19/03/2026" },
-  { id: "OS-2024-0146", veiculo: "Volvo FH 540 — XYZ-9K87", servico: "Revisão completa", status: "concluida", data: "18/03/2026" },
-  { id: "OS-2024-0145", veiculo: "Carreta Randon — QRS-4F56", servico: "Troca de lonas de freio", status: "pendente", data: "17/03/2026" },
-  { id: "OS-2024-0144", veiculo: "Mercedes Actros — LMN-7H01", servico: "Troca de óleo e filtros", status: "concluida", data: "16/03/2026" },
-  { id: "OS-2024-0143", veiculo: "DAF XF — GHI-2B34", servico: "Alinhamento e balanceamento", status: "em_andamento", data: "15/03/2026" },
-];
+const recentOrders = ordensIniciais.slice(0, 5).map((o) => ({
+  id: o.id,
+  veiculo: o.veiculo,
+  servico: o.servico,
+  status: o.status,
+  data: o.data,
+}));
 
 const statusConfig: Record<string, { label: string; className: string; icon: typeof CheckCircle }> = {
   pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-warning/30", icon: Clock },
